@@ -30,7 +30,7 @@ This project is a backend application for a social media platform, designed to h
 
 #### **1. Clone the Repository**
 ```bash
-git clone url
+git clone https://github.com/ChefnCoder/Social-Media-Api-Backend.git
 cd social-media-app-api
 ```
 
