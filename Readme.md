@@ -128,4 +128,4 @@ Use tools like [Postman](https://www.postman.com/) to interact with the API.
 ---
 
 ### **Deployment**
-- Live Link: 
+- Live Link: https://social-media-api-backend-38so.onrender.com
