@@ -48,7 +48,9 @@ io.on("connection", (socket) => {
         console.log("WebSocket disconnected:", socket.id);
     });
 });
-
+app.get("/config", (req, res) => {
+    res.json({ socketServerUrl: process.env.SOCKET_SERVER_URL || "http://localhost:5000" });
+});
 // Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

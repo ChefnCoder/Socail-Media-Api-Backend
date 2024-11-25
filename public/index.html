@@ -69,55 +69,65 @@
 
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <script>
-        const socket = io("http://localhost:5000");
+    // Paths to default favicon and green dot favicon
+    const defaultFavicon = "favicon.ico"; 
+    const greenDotFavicon = "green-dot.ico"; 
 
-        // Paths to default favicon and green dot favicon
-        const defaultFavicon = "favicon.ico"; 
-        const greenDotFavicon = "green-dot.ico"; 
-
-        // Function to update the favicon
-        function updateFavicon(icon) {
-            const favicon = document.getElementById("favicon");
-            if (favicon) {
-                favicon.href = icon;
-            }
+    // Function to update the favicon
+    function updateFavicon(icon) {
+        const favicon = document.getElementById("favicon");
+        if (favicon) {
+            favicon.href = icon;
         }
+    }
 
-        // Reset favicon after user interaction
-        window.addEventListener("focus", () => {
-            updateFavicon(defaultFavicon);
+    // Reset favicon after user interaction
+    window.addEventListener("focus", () => {
+        updateFavicon(defaultFavicon);
+    });
+
+    // Fetch the server URL from the backend or use default localhost
+    fetch("/config")
+        .then((response) => response.json())
+        .then((config) => {
+            const socketServerUrl = config.socketServerUrl || "http://localhost:5000"; // Fallback to localhost if no URL is provided
+            const socket = io(socketServerUrl); // Use the URL for Socket.IO connection
+
+            // Display messages in the chat
+            socket.on("receiveMessage", (data) => {
+                const messagesDiv = document.getElementById("messages");
+                const messageElement = document.createElement("p");
+                messageElement.textContent = `${data.user}: ${data.message}`;
+                messagesDiv.appendChild(messageElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+
+            // Display notifications for new comments
+            socket.on("newComment", (data) => {
+                const messagesDiv = document.getElementById("messages");
+                const notificationElement = document.createElement("p");
+                notificationElement.className = "notification";
+                notificationElement.textContent = `New comment on post ${data.postId}: "${data.text}"`;
+                messagesDiv.appendChild(notificationElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+                updateFavicon(greenDotFavicon);
+            });
+
+            // Send a chat message
+            document.getElementById("sendButton").addEventListener("click", () => {
+                const messageInput = document.getElementById("messageInput");
+                const message = messageInput.value.trim();
+                if (message) {
+                    socket.emit("sendMessage", { user: "User1", message });
+                    messageInput.value = "";
+                }
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching socket server URL:", error);
         });
+</script>
 
-        // Display messages in the chat
-        socket.on("receiveMessage", (data) => {
-            const messagesDiv = document.getElementById("messages");
-            const messageElement = document.createElement("p");
-            messageElement.textContent = `${data.user}: ${data.message}`;
-            messagesDiv.appendChild(messageElement);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        });
-
-        // Display notifications for new comments
-        socket.on("newComment", (data) => {
-            const messagesDiv = document.getElementById("messages");
-            const notificationElement = document.createElement("p");
-            notificationElement.className = "notification";
-            notificationElement.textContent = `New comment on post ${data.postId}: "${data.text}"`;
-            messagesDiv.appendChild(notificationElement);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-            updateFavicon(greenDotFavicon);
-        });
-
-        // Send a chat message
-        document.getElementById("sendButton").addEventListener("click", () => {
-            const messageInput = document.getElementById("messageInput");
-            const message = messageInput.value.trim();
-            if (message) {
-                socket.emit("sendMessage", { user: "User1", message });
-                messageInput.value = "";
-            }
-        });
-    </script>
 </body>
 </html>
