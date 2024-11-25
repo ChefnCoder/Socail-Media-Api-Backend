@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat & Notifications</title>
+    <link id="favicon" rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+        #messages p {
+            margin: 5px 0;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+        }
+        #messages p.notification {
+            color: green;
+            font-weight: bold;
+        }
+        #messages p.notification::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background-color: green;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        #messageInput {
+            width: calc(100% - 70px);
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #sendButton {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        #sendButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>Real-Time Chat & Notifications</h1>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type your message..." />
+    <button id="sendButton">Send</button>
+
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script>
+        const socket = io("http://localhost:5000");
+
+        // Paths to default favicon and green dot favicon
+        const defaultFavicon = "favicon.ico"; 
+        const greenDotFavicon = "green-dot.ico"; 
+
+        // Function to update the favicon
+        function updateFavicon(icon) {
+            const favicon = document.getElementById("favicon");
+            if (favicon) {
+                favicon.href = icon;
+            }
+        }
+
+        // Reset favicon after user interaction
+        window.addEventListener("focus", () => {
+            updateFavicon(defaultFavicon);
+        });
+
+        // Display messages in the chat
+        socket.on("receiveMessage", (data) => {
+            const messagesDiv = document.getElementById("messages");
+            const messageElement = document.createElement("p");
+            messageElement.textContent = `${data.user}: ${data.message}`;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        // Display notifications for new comments
+        socket.on("newComment", (data) => {
+            const messagesDiv = document.getElementById("messages");
+            const notificationElement = document.createElement("p");
+            notificationElement.className = "notification";
+            notificationElement.textContent = `New comment on post ${data.postId}: "${data.text}"`;
+            messagesDiv.appendChild(notificationElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            updateFavicon(greenDotFavicon);
+        });
+
+        // Send a chat message
+        document.getElementById("sendButton").addEventListener("click", () => {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+            if (message) {
+                socket.emit("sendMessage", { user: "User1", message });
+                messageInput.value = "";
+            }
+        });
+    </script>
+</body>
+</html>
